@@ -1,0 +1,34 @@
+version: 0.2
+env:
+  variables:
+    APP_NAME: "myangularapp"
+phases:
+  install:
+    commands:
+      - npm install -g @angular/cli@14.2.10
+      - npm install
+    on-failure: ABORT
+  pre_build:
+    commands:
+    - curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+    - apt-get -y update
+    - apt-get -y install google-chrome-stable
+    on-failure: ABORT
+  build:
+    commands:
+      - ng test --no-watch --browsers=ChromeHeadless --code-coverage
+reports:
+  testreport:
+    files:
+      - 'reports/**/*'
+  codecoveragereport:
+    files:
+      - 'coverage/$APP_NAME/cobertura-coverage.xml'
+    file-format: COBERTURAXML
+artifacts:
+  files:
+    - 'reports/**/*'
+    - 'coverage/**/*'
+  discard-paths: yes
+  name: angularapptestartifacts-build-$CODEBUILD_BUILD_NUMBER

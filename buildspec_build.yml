@@ -1,0 +1,22 @@
+version: 0.2
+env:
+  variables:
+    APP_NAME: "myangularapp"
+phases:
+  install:
+    commands:
+      - npm install -g @angular/cli@14.2.10
+      - npm install
+    on-failure: ABORT
+  build:
+    commands:
+      - ng build --aot
+    on-failure: ABORT
+artifacts:
+  files:
+    - 'dist/$APP_NAME/**/*'
+    - 'scripts/**/*'
+    - 'appspec.yml'
+    - 'buildspec_build.yml'
+  discard-paths: yes
+  name: angularappbuildartifacts-build-$CODEBUILD_BUILD_NUMBER

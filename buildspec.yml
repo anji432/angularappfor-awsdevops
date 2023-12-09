@@ -1,0 +1,45 @@
+version: 0.2
+env:
+  variables:
+    APP_NAME: "myangularapp"
+#     INSTALL_ANGULAR_CLI: "npm install -g @angular/cli@14.2.10"
+#     INSTALL_DEPENDENCIES: "npm install"
+#     RUN_BUILD: "ng build --aot"
+#     RUN_TESTS: "ng test --no-watch --browsers=ChromeHeadless"
+
+phases:
+  install:
+    commands:
+      - npm install -g @angular/cli@14.2.10
+      - npm install
+    on-failure: ABORT
+  pre_build:
+    commands:
+    - curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+    - apt-get -y update
+    - apt-get -y install google-chrome-stable
+    on-failure: ABORT
+  build:
+    commands:
+      - ng test --no-watch --browsers=ChromeHeadless --code-coverage
+    # on-failure: CONTINUE
+  post_build:
+    commands:
+      - ng build --aot
+    # on-failure: CONTINUE
+reports:
+  arn:aws:codebuild:us-west-2:370384353359:report-group/angularapp-testreport:
+    files:
+      - 'reports/**/*'
+  arn:aws:codebuild:us-west-2:370384353359:report-group/codecoveragereport:
+    files:
+      - 'coverage/$APP_NAME/cobertura-coverage.xml'
+    file-format: COBERTURAXML
+artifacts:
+  files:
+    - 'dist/$APP_NAME/**/*'
+    - 'scripts/**/*'
+    - 'appspec.yml'
+  discard-paths: yes
+  name: angularappartifacts-build-$CODEBUILD_BUILD_NUMBER
